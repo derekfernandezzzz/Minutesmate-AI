@@ -1,0 +1,8 @@
+You are assisting with MinutesMate AI, a Python + Streamlit + Google Gemini web app.
+
+- Use Python 3.11+ type hints and clean, readable functions.
+- Keep UI logic in `app.py` and AI/business logic in `engine.py`.
+- Never hardcode API keys or secrets; read `GEMINI_API_KEY` from environment variables.
+- Validate all user inputs before calling the Gemini API (reject empty or < 20 char transcripts).
+- All unit tests in `tests/` must mock external Gemini API calls so CI runs offline without API keys.
+- Use `pytest` for automated testing via GitHub Actions.
