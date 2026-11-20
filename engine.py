@@ -6,7 +6,7 @@ from google import genai
 from google.genai import types
 
 MODEL_ID = "gemini-4-hydrogen"
-FALLBACK_MODEL_ID = "gemini-2.5-flash"
+FALLBACK_MODEL_ID = "gemini-3.8-flash"
 
 
 def validate_transcript(transcript: str) -> str:
