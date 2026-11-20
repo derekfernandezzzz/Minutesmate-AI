@@ -6,6 +6,7 @@ from google import genai
 from google.genai import types
 
 MODEL_ID = "gemini-4-hydrogen"
+FALLBACK_MODEL_ID = "gemini-2.5-flash"
 
 
 def validate_transcript(transcript: str) -> str:
@@ -112,14 +113,32 @@ Transcript:
 """
 
     start_time = time.perf_counter()
-    response = client.models.generate_content(
-        model=MODEL_ID,
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            temperature=0.1,
-        ),
-    )
+    models_to_try = [MODEL_ID, FALLBACK_MODEL_ID]
+    response = None
+    last_exc: Optional[Exception] = None
+    model_used = MODEL_ID
+
+    for candidate_model in models_to_try:
+        try:
+            response = client.models.generate_content(
+                model=candidate_model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.1,
+                ),
+            )
+            model_used = candidate_model
+            break
+        except Exception as exc:
+            last_exc = exc
+            if "503" in str(exc) or "UNAVAILABLE" in str(exc):
+                continue
+            raise
+
+    if response is None and last_exc is not None:
+        raise last_exc
+
     latency_sec = round(time.perf_counter() - start_time, 2)
 
     raw_text = (response.text or "").strip()
@@ -138,5 +157,5 @@ Transcript:
         "missing_count": audit["missing_count"],
         "followup_nudges": parsed.get("followup_nudges", []),
         "latency_sec": latency_sec,
-        "model_used": MODEL_ID,
+        "model_used": model_used,
     }
